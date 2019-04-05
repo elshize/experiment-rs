@@ -20,6 +20,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+use std::io;
+use std::path::Path;
+
 #[macro_use]
 pub mod process;
 
@@ -41,5 +44,53 @@ pub fn verbose_if(verbose: bool, max_args: usize) -> Verbosity {
         Verbosity::Verbose
     } else {
         Verbosity::Brief(max_args)
+    }
+}
+
+/// Indicator of whether to overwrite or fail when writing to existing files.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum OverwritePolicy {
+    Force,
+    Fail,
+}
+
+/// Returns [`OverwritePolicy`](OverwritePolicy.t.html) based on a condition.
+/// ```
+/// # use experiment::{force_if, OverwritePolicy};
+/// assert_eq!(force_if(true), OverwritePolicy::Force);
+/// assert_eq!(force_if(false), OverwritePolicy::Fail);
+/// ```
+pub fn force_if(force: bool) -> OverwritePolicy {
+    if force {
+        OverwritePolicy::Force
+    } else {
+        OverwritePolicy::Fail
+    }
+}
+
+/// Creates a directory given by `dir` if doesn't exists or if the policy is `Force`.
+///
+/// # Examples
+/// ```
+/// # use tempdir::TempDir;
+/// # use experiment::safe_mkdir;
+/// # use experiment::OverwritePolicy;
+/// let dir = TempDir::new("dir").unwrap();
+/// let existing_path = dir.path();
+/// assert!(safe_mkdir(existing_path, OverwritePolicy::Fail).is_err());
+/// assert!(safe_mkdir(existing_path, OverwritePolicy::Force).is_ok());
+/// let subdir = existing_path.join("subdir");
+/// assert!(safe_mkdir(subdir.as_path(), OverwritePolicy::Force).is_ok());
+/// ```
+pub fn safe_mkdir(dir: &Path, policy: OverwritePolicy) -> io::Result<()> {
+    match (policy, dir.exists()) {
+        (OverwritePolicy::Fail, true) => Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!(
+                "{} exists! Use --force option to overwrite.",
+                dir.to_str().unwrap_or("<Invalid UTF-8>")
+            ),
+        )),
+        (_, _) => std::fs::create_dir_all(dir),
     }
 }
