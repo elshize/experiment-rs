@@ -117,9 +117,12 @@ impl Process {
     /// # use experiment::process::Process;
     /// let process = Process::new("echo", &["Hello,", "World!"]);
     /// process.execute().expect("Failed to run process");
+    ///
+    /// let process = Process::new("unknown_process", &Vec::<&str>::new());
+    /// assert!(process.execute().is_err());
     /// ```
     pub fn execute(&self) -> std::io::Result<ExitStatus> {
-        self.command().spawn().expect("Failed to spawn").wait()
+        self.command().status()
     }
 }
 
@@ -240,7 +243,7 @@ impl ProcessPipeline {
 
     /// Executes the entire pipeline disregarding the output.
     pub fn execute(&self) -> std::io::Result<ExitStatus> {
-        self.pipe().spawn().expect("Failed to spawn").wait()
+        self.pipe().status()
     }
 }
 
