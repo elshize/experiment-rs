@@ -117,6 +117,9 @@ impl Process {
     /// # use experiment::process::Process;
     /// let process = Process::new("echo", &["Hello,", "World!"]);
     /// process.execute().expect("Failed to run process");
+    ///
+    /// let process = Process::new("unknown_process", &Vec::<&str>::new());
+    /// assert!(process.execute().is_err());
     /// ```
     pub fn execute(&self) -> std::io::Result<ExitStatus> {
         self.command().status()
