@@ -119,7 +119,7 @@ impl Process {
     /// process.execute().expect("Failed to run process");
     /// ```
     pub fn execute(&self) -> std::io::Result<ExitStatus> {
-        self.command().spawn().expect("Failed to spawn").wait()
+        self.command().status()
     }
 }
 
@@ -240,7 +240,7 @@ impl ProcessPipeline {
 
     /// Executes the entire pipeline disregarding the output.
     pub fn execute(&self) -> std::io::Result<ExitStatus> {
-        self.pipe().spawn().expect("Failed to spawn").wait()
+        self.pipe().status()
     }
 }
 
